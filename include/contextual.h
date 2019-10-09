@@ -31,139 +31,97 @@ To implement:
 
 */
 
-class with;
-// The struct that will hold the resource data
+class With;
+// The struct that will hold the resource Basedata
 struct Data;
 
+//template <struct Data>
 struct Context {
 private:
 	std::function<void(Data*)> code_block;
-	friend class with;
+	friend class With;
 public:
 	Context(std::function<void(Data*)> code_block): code_block(std::move(code_block)){};
-
+	
 };
 
 
 // The resource manager class interface
+//template <struct Data>
 class BaseResource {
+private:
+	std::optional<Context> ctxt = std::nullopt;
 public:
-	friend class with;
+	friend class With;
 
 	// The actual resources
 	
 	virtual void enter() = 0;
-	virtual void exit(std::exception& e) = 0;
+	virtual void exit(std::optional<std::exception> e) = 0;
 
 
 	Data* resources;
-	BaseResource(): resources(nullptr){};
-	BaseResource(Data& resources) : resources(&resources){};
-	with operator+(const Context& context);
+	BaseResource() = default;
+	BaseResource(Data* resources) : resources(resources){
+		
+	};
+	With operator+(const Context& context);
+	
 };
 
-class with {
+class With {
 private:
-	const Context* _context = nullptr;
+	Context* _context = nullptr;
+
+	void _run(){
+		try{
+			
+			// Execute the context
+			resource->enter();
+			_context->code_block(resource->resources);
+			
+		} catch (std::exception& e) {
+			// cleanup
+			resource->exit(e);
+			return;
+		}
+		resource->exit(std::nullopt);
+	}
 
 public:
 	// TODO: Make generic with type checking
 	BaseResource* resource=nullptr;
 	// The rule of five
-	with() = delete;
-	with(const with& other){
-		try{
-			// Execute the context
-			other.resource->enter();
-			other._context->code_block(other.resource->resources);
-		} catch (std::exception& e) {
-			// cleanup
-			delete other._context;
-			// TODO : Should this be done?
-			try{
-				// perform final user specifie actions
-				other.resource->exit(e);
-			} catch (std::exception& e) {
-				// if use allows exception to propogate,
-				// make sure resource object is deleted
-				delete other.resource;
-				throw e;
-			}
-				// if user suppresses all exceptions, make
-				// sure that resource object is deleted
-				delete other.resource;
-		}
-	}
-	
-	with& operator=(const with& other){
-		try{
-			// Execute the context
-			other.resource->enter();
-			other._context->code_block(other.resource->resources);
-		} catch (std::exception& e) {
-			// cleanup
-			delete other._context;
-			// TODO : Should this be done?
-			try{
-				// perform final user specifie actions
-				other.resource->exit(e);
-			} catch (std::exception& e) {
-				// if use allows exception to propogate,
-				// make sure resource object is deleted
-				delete other.resource;
-				throw e;
-			}
-				// if user suppresses all exceptions, make
-				// sure that resource object is deleted
-				delete other.resource;
-		}
-	}
+	With() = delete;
+	With(const With& other) = delete;
+	With& operator=(const With& other) = delete;
+	With& operator=(const With&& other) = delete;
 
-	with operator=(const with&& other){
-		
-		try{
-			// Execute the context
-			other.resource->enter();
-			other._context->code_block(other.resource->resources);
-		} catch (std::exception& e) {
-			// cleanup
-			delete other._context;
-			// TODO : Should this be done?
-			try{
-				// perform final user specifie actions
-				other.resource->exit(e);
-			} catch (std::exception& e) {
-				// if use allows exception to propogate,
-				// make sure resource object is deleted
-				delete other.resource;
-				throw e;
-			}
-				// if user suppresses all exceptions, make
-				// sure that resource object is deleted
-				delete other.resource;
-		}
-	}
+	~With() = default;
 
-	~with() = default;
-
-	with(BaseResource* resource, const Context* context): resource(resource),
-													_context(context) {};
+	With(BaseResource* resource, Context* context): resource(resource),
+													_context(context) {
+														_run();
+													};
 
 };
 
-with BaseResource::operator+(const Context& context){
-	return with(this, &context);
+With BaseResource::operator+(const Context& context){
+	ctxt = context;
+	return With(this, &ctxt.value());
 
 }
 
 /*
 	Example usage
 
-	with ContextManager = Resource(data struct) + Context{
+	with {
+		Resource(Basedata struct) + Context{
 	
-		[&](auto resource){
-			...code
+			[&](auto resource){
+				...code
+			}
 		}
-	} ;
+	};
 
 */

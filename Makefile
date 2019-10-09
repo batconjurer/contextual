@@ -1,5 +1,5 @@
 
-CFLAGS=-Wall -DNDEBUG -march=native -ffast-math -std=c++17 -O3 -fPIC -Iinclude
+CFLAGS=-Wfatal-errors -DNDEBUG -march=native -ffast-math -std=c++17 -O0 -fPIC -Iinclude
 LDFLAGS=
 
 
