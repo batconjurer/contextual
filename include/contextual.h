@@ -20,27 +20,24 @@ A context manager must then perform the following actions:
 	5. Release the resources and cleanup before exiting back to outer scope.
 
 
+A class With type is defined so that its brace-initialization resembles a traditional
+code block and gives the impression of With being a keyword. Most of its rule of five
+operations are deleted to enforce this usage as it is not a traditional object.
 
-To implement:
-
-	__init__: RAII
-
-	__enter__: Trivial
-
-	__exit__: TODO
 
 */
 
+// Forward declaration of the With class
 class With;
-// The struct that will hold the resource Basedata
+// The struct that will hold the resources acquired for the context
 struct Data;
 
 //template <struct Data>
 struct Context {
 private:
 	std::function<void(Data*)> code_block;
-	friend class With;
 public:
+	friend class With;
 	Context(std::function<void(Data*)> code_block): code_block(std::move(code_block)){};
 	
 };
@@ -50,32 +47,32 @@ public:
 //template <struct Data>
 class BaseResource {
 private:
+	// We store the context so that it is not deallocated prematurely
 	std::optional<Context> ctxt = std::nullopt;
-public:
-	friend class With;
-
-	// The actual resources
 	
+protected:
+	// The actual resources
+	Data* resources;
 	virtual void enter() = 0;
 	virtual void exit(std::optional<std::exception> e) = 0;
 
-
-	Data* resources;
+public:
+	friend class With;
+	
 	BaseResource() = default;
-	BaseResource(Data* resources) : resources(resources){
-		
-	};
+	BaseResource(Data* resources) : resources(resources){};
 	With operator+(const Context& context);
 	
 };
 
+
+// The With class the emulates a keyword with codeblock
 class With {
 private:
 	Context* _context = nullptr;
 
 	void _run(){
 		try{
-			
 			// Execute the context
 			resource->enter();
 			_context->code_block(resource->resources);
@@ -115,7 +112,7 @@ With BaseResource::operator+(const Context& context){
 /*
 	Example usage
 
-	with {
+	With {
 		Resource(Basedata struct) + Context{
 	
 			[&](auto resource){
