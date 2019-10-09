@@ -10,7 +10,7 @@ struct Data {
 //typedef Context BaseContext<Data>;
 
 class Resource : public BaseResource {
-public:
+private:
 	std::string _password = "xxxxxxxxx";
 
 	void enter() override {
@@ -22,7 +22,7 @@ public:
 		std::swap(_password, resources->password);
 
 	}
-
+public:
 
 	Resource(Data resources): BaseResource::BaseResource(&resources){};
 };
