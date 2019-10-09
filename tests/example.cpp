@@ -29,7 +29,7 @@ public:
 
 
 int main(){
-	Data first_user{"AmbarDas", "hickory76"};
+	Data first_user{"admin", "password123"};
 	With {
 		Resource(first_user) + Context {
 			eval {
