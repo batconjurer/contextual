@@ -20,9 +20,10 @@ A context manager must then perform the following actions:
 	5. Release the resources and cleanup before exiting back to outer scope.
 
 
-A class With type is defined so that its brace-initialization resembles a traditional
+A class With is defined so that its brace-initialization resembles a traditional
 code block and gives the impression of With being a keyword. Most of its rule of five
-operations are deleted to enforce this usage as it is not a traditional object.
+operations are deleted to enforce this usage as it is not a traditional object, also
+ensuring that the destructors of all temporary objects are called.
 
 
 */
@@ -31,8 +32,9 @@ namespace Contextual {
 
 // Forward declaration of the With class
 class With;
-// The struct that will hold the resources acquired for the context
-struct Data;
+// The struct that will hold the resources acquired for the context,
+// to be defined by user
+struct IData;
 
 /********************************************
 *											*
@@ -44,10 +46,10 @@ struct Data;
 
 struct Context {
 private:
-	std::function<void(Data*)> code_block;
+	std::function<void(IData*)> code_block;
 public:
 	friend class With;
-	Context(std::function<void(Data*)> code_block): code_block(std::move(code_block)){};
+	Context(std::function<void(IData*)> code_block): code_block(std::move(code_block)){};
 	
 };
 
@@ -65,7 +67,7 @@ private:
 	
 protected:
 	// The actual resources
-	data* resources_ptr;
+	data* resources;
 	
 	virtual void enter() = 0;
 	virtual void exit(std::optional<std::exception> e) = 0;
@@ -89,8 +91,20 @@ public:
 class With {
 private:
 	Context* _context = nullptr;
+		
 
-	void _run(){
+public:
+	IResource<IData>* resource=nullptr;
+	// The rule of five
+	With() = delete;
+	With(const With& other) = delete;
+	With& operator=(const With& other) = delete;
+	With& operator=(const With&& other) = delete;
+
+	~With() = default;
+
+	With(IResource<IData>* resource, Context* context): resource(resource),
+													   _context(context) {
 		try{
 			// Execute the context
 			resource->enter();
@@ -102,22 +116,8 @@ private:
 			return;
 		}
 		resource->exit(std::nullopt);
+		
 	}
-
-public:
-	IResource<Data>* resource=nullptr;
-	// The rule of five
-	With() = delete;
-	With(const With& other) = delete;
-	With& operator=(const With& other) = delete;
-	With& operator=(const With&& other) = delete;
-
-	~With() = default;
-
-	With(IResource<Data>* resource, Context* context): resource(resource),
-													   _context(context) {
-		_run();
-	};
 
 };
 
@@ -136,7 +136,7 @@ With IResource<data>::operator+(const Context& context){
 	Example usage
 *********************************************************
 	With {
-		Resource(Basedata struct) + Context{
+		Resource(IData struct) + Context{
 	
 			[&](auto resource){
 				...code

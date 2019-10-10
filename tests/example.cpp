@@ -6,7 +6,7 @@ using namespace Contextual;
 
 namespace Contextual {
 
-	struct Data {
+	struct IData {
 		std::string username;
 		std::string password;
 		bool logged_in = false;
@@ -14,7 +14,7 @@ namespace Contextual {
 
 
 
-	class Resource : public IResource<Data> {
+	class Resource : public IResource<IData> {
 	private:
 		std::string _password = "xxxxxxxxx";
 
@@ -29,7 +29,7 @@ namespace Contextual {
 		}
 	public:
 
-		Resource(Data &resources): IResource<Data>(resources){};
+		Resource(IData &resources): IResource<IData>(resources){};
 
 	};
 };
@@ -37,7 +37,7 @@ namespace Contextual {
 
 
 int main(){
-	Data first_user{"admin", "password123"};
+	IData first_user{"admin", "password123"};
 	std::cout << "Logged in: " << first_user.logged_in << "\n\n";
 	With PasswordHidden {
 		Resource(first_user) + Context {
