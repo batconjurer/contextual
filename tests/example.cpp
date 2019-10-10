@@ -4,32 +4,36 @@
 
 using namespace Contextual;
 
-struct Data {
-	std::string username;
-	std::string password;
-	bool logged_in = false;
+namespace Contextual {
+
+	struct Data {
+		std::string username;
+		std::string password;
+		bool logged_in = false;
+	};
+
+
+
+	class Resource : public IResource<Data> {
+	private:
+		std::string _password = "xxxxxxxxx";
+
+		void enter() override {
+			std::swap(_password, resources->password);
+		}
+
+		void exit(std::optional<std::exception> e) override {
+			std::swap(_password, resources->password);
+			resources->logged_in = true;
+
+		}
+	public:
+
+		Resource(Data &resources): IResource<Data>(resources){};
+
+	};
 };
 
-
-
-class Resource : public IResource {
-private:
-	std::string _password = "xxxxxxxxx";
-
-	void enter() override {
-		std::swap(_password, resources->password);
-	}
-
-	void exit(std::optional<std::exception> e) override {
-		std::swap(_password, resources->password);
-		resources->logged_in = true;
-
-	}
-public:
-
-	Resource(Data &resources): BaseResource::BaseResource(&resources){};
-
-};
 
 
 int main(){

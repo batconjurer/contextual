@@ -57,6 +57,7 @@ public:
 *											*
 ********************************************/
 
+template <class data>
 class IResource {
 private:
 	// We store the context so that it is not deallocated prematurely
@@ -64,15 +65,16 @@ private:
 	
 protected:
 	// The actual resources
-	Data* resources;
+	data* resources_ptr;
+	
 	virtual void enter() = 0;
 	virtual void exit(std::optional<std::exception> e) = 0;
 
 public:
 	friend class With;
 	
-	IResource() = default;
-	IResource(Data* resources) : resources(resources){};
+	IResource<data>() = default;
+	IResource<data>(data& resources) : resources(&resources){};
 	With operator+(const Context& context);
 	
 };
@@ -103,7 +105,7 @@ private:
 	}
 
 public:
-	IResource* resource=nullptr;
+	IResource<Data>* resource=nullptr;
 	// The rule of five
 	With() = delete;
 	With(const With& other) = delete;
@@ -112,16 +114,17 @@ public:
 
 	~With() = default;
 
-	With(IResource* resource, Context* context): resource(resource),
-													_context(context) {
-														_run();
-													};
+	With(IResource<Data>* resource, Context* context): resource(resource),
+													   _context(context) {
+		_run();
+	};
 
 };
 
 //********************************************************
 
-With IResource::operator+(const Context& context){
+template <class data>
+With IResource<data>::operator+(const Context& context){
 	ctxt = context;
 	return With(this, &ctxt.value());
 
