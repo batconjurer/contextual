@@ -1,5 +1,7 @@
 #include <iostream>
 #include <functional>
+#include <memory>
+#include <variant>
 #include <optional>
 #include <exception>
 /*
@@ -45,12 +47,13 @@ struct IData;
 
 
 struct Context {
+
 private:
 	std::function<void(IData*)> code_block;
+
 public:
 	friend class With;
 	Context(std::function<void(IData*)> code_block): code_block(std::move(code_block)){};
-	
 };
 
 /********************************************
@@ -67,6 +70,7 @@ private:
 	
 protected:
 	// The actual resources
+	
 	data* resources;
 	
 	virtual void enter() = 0;
@@ -77,6 +81,8 @@ public:
 	
 	IResource<data>() = default;
 	IResource<data>(data& resources) : resources(&resources){};
+	IResource<data>(data* resources) : resources(resources){};
+	
 	With operator+(const Context& context);
 	
 };
@@ -108,7 +114,7 @@ public:
 		try{
 			// Execute the context
 			resource->enter();
-			_context->code_block(resource->resources);
+			_context->code_block(std::move(resource->resources));
 			
 		} catch (std::exception& e) {
 			// cleanup

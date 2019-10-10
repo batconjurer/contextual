@@ -6,4 +6,4 @@ LDFLAGS=
 all: example
 
 example: tests/example.cpp
-	g++ -o example $(CFLAGS) tests/example.cpp $(LDFLAGS) 
+	g++ -o example $(CFLAGS) example.cpp $(LDFLAGS) 
