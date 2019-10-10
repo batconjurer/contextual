@@ -2,6 +2,8 @@
 #include <algorithm>
 #define eval [&](auto resource)
 
+using namespace Contextual;
+
 struct Data {
 	std::string username;
 	std::string password;
@@ -10,7 +12,7 @@ struct Data {
 
 
 
-class Resource : public BaseResource {
+class Resource : public IResource {
 private:
 	std::string _password = "xxxxxxxxx";
 

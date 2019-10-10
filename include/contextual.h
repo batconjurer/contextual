@@ -27,6 +27,8 @@ operations are deleted to enforce this usage as it is not a traditional object.
 
 */
 
+namespace Contextual {
+
 // Forward declaration of the With class
 class With;
 // The struct that will hold the resources acquired for the context
@@ -124,6 +126,8 @@ With IResource::operator+(const Context& context){
 	return With(this, &ctxt.value());
 
 }
+
+};
 
 /********************************************************
 	Example usage
