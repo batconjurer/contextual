@@ -8,7 +8,7 @@ struct Data {
 	bool logged_in = false;
 };
 
-//typedef Context BaseContext<Data>;
+
 
 class Resource : public BaseResource {
 private:
@@ -26,13 +26,14 @@ private:
 public:
 
 	Resource(Data &resources): BaseResource::BaseResource(&resources){};
+
 };
 
 
 int main(){
 	Data first_user{"admin", "password123"};
 	std::cout << "Logged in: " << first_user.logged_in << "\n\n";
-	With {
+	With PasswordHidden {
 		Resource(first_user) + Context {
 			eval {
 				std::cout << "Username: " << resource->username << "\n";
@@ -41,6 +42,8 @@ int main(){
 			}
 		}
 	};
+
+
 
 
 	std::cout << "Username: " << first_user.username << "\n";

@@ -32,7 +32,14 @@ class With;
 // The struct that will hold the resources acquired for the context
 struct Data;
 
-//template <struct Data>
+/********************************************
+*											*
+* 	Basic struct to hold the code block 	*
+*	to be executed with acquired resources	*
+*											*
+********************************************/
+
+
 struct Context {
 private:
 	std::function<void(Data*)> code_block;
@@ -42,10 +49,13 @@ public:
 	
 };
 
+/********************************************
+*											*
+* 	The resource manager class interface	*
+*											*
+********************************************/
 
-// The resource manager class interface
-//template <struct Data>
-class BaseResource {
+class IResource {
 private:
 	// We store the context so that it is not deallocated prematurely
 	std::optional<Context> ctxt = std::nullopt;
@@ -59,14 +69,19 @@ protected:
 public:
 	friend class With;
 	
-	BaseResource() = default;
-	BaseResource(Data* resources) : resources(resources){};
+	IResource() = default;
+	IResource(Data* resources) : resources(resources){};
 	With operator+(const Context& context);
 	
 };
 
+/************************************
+*									*
+* 	The With class the emulates a 	*
+*        keyword with code block 	*
+*									*
+************************************/
 
-// The With class the emulates a keyword with codeblock
 class With {
 private:
 	Context* _context = nullptr;
@@ -86,8 +101,7 @@ private:
 	}
 
 public:
-	// TODO: Make generic with type checking
-	BaseResource* resource=nullptr;
+	IResource* resource=nullptr;
 	// The rule of five
 	With() = delete;
 	With(const With& other) = delete;
@@ -96,22 +110,24 @@ public:
 
 	~With() = default;
 
-	With(BaseResource* resource, Context* context): resource(resource),
+	With(IResource* resource, Context* context): resource(resource),
 													_context(context) {
 														_run();
 													};
 
 };
 
-With BaseResource::operator+(const Context& context){
+//********************************************************
+
+With IResource::operator+(const Context& context){
 	ctxt = context;
 	return With(this, &ctxt.value());
 
 }
 
-/*
+/********************************************************
 	Example usage
-
+*********************************************************
 	With {
 		Resource(Basedata struct) + Context{
 	
@@ -121,4 +137,4 @@ With BaseResource::operator+(const Context& context){
 		}
 	};
 
-*/
+*********************************************************/
