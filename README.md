@@ -1,2 +1,2 @@
-![](other/logo.png=100x200)
+![](other/logo.png)
 A context manager framework for C++
