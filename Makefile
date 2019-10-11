@@ -1,12 +1,12 @@
 
-CFLAGS=-Wall -DNDEBUG -march=native -ffast-math -std=c++17 -O3 -fPIC -Iinclude
+CFLAGS=-Wall -DNDEBUG -march=native -ffast-math -std=c++17 -g -O0 -fPIC -Iinclude
 LDFLAGS=
 
 
-all: example tests
+all: example test
 
-example: tests/example.cpp
+example: example.cpp
 	g++ -o example $(CFLAGS) example.cpp $(LDFLAGS) 
 
-tests: tests/test.cpp
+test: tests/test.cpp
 	g++ -o test $(CFLAGS) tests/test.cpp $(LDFLAGS)

@@ -96,11 +96,10 @@ public:
 
 class With {
 private:
-	Context* _context = nullptr;
+	Context* _context;
 		
-
 public:
-	IResource<IData>* resource=nullptr;
+	IResource<IData>* resource;
 	// The rule of five
 	With() = delete;
 	With(const With& other) = delete;
@@ -109,8 +108,9 @@ public:
 
 	~With() = default;
 
-	With(IResource<IData>* resource, Context* context): resource(resource),
-													   _context(context) {
+	With(Context* context=nullptr, IResource<IData>* resource=nullptr): _context(context),
+									 								    resource(resource)
+							  			   			  			        {
 		try{
 			// Execute the context
 			resource->enter();
@@ -132,7 +132,7 @@ public:
 template <class data>
 With IResource<data>::operator+(const Context& context){
 	ctxt = context;
-	return With(this, &ctxt.value());
+	return With(&ctxt.value(), this);
 
 }
 

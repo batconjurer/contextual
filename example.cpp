@@ -29,40 +29,43 @@ namespace Contextual {
 
 		}
 	public:
-
+		Resource(IData* resources): IResource<IData>(resources){};
 		Resource(IData &resources): IResource<IData>(resources){};
 		Resource(IData &&resources): IResource<IData>(&resources){};
-		Resource(std::string username, std::string password) : _data(IData{username, password}),
-		 													   IResource<IData>(_data){};
+		Resource(std::string username, std::string password) : IResource<IData>(_data),
+															   _data(IData{username, password})
+		 													   {};
 	
 
 
 	};
 };
-
-
+	
 
 int main(){
 	IData first_user{"admin", "password123"};
 	std::cout << "Logged in: " << first_user.logged_in << "\n\n";
 	
-	With PasswordHidden {
-		Resource(first_user) + Context {
-			eval {
-				std::cout << "Username: " << resource->username << "\n";
-				std::cout << "Password: " << resource->password << "\n";
-				resource->logged_in = true;
+	{
+		With PasswordHidden {
+			Resource(first_user) + Context {
+				eval {
+					std::cout << "Username: " << resource->username << "\n";
+					std::cout << "Password: " << resource->password << "\n";
+					resource->logged_in = true;
+				}
 			}
-		}
-	};
-
-
-
+		};
+	}
+	
+	
+	
+	
 
 	std::cout << "Username: " << first_user.username << "\n";
 	std::cout << "Password: " << first_user.password << "\n";
 	std::cout << "Logged in: " << first_user.logged_in << "\n";
-	
+
 	std::cout << "\n====================================\n\n";
 
 	With {
@@ -74,5 +77,23 @@ int main(){
 			}
 		}
 	};
+
+	std::cout << "Username: " << first_user.username << "\n";
+	std::cout << "Password: " << first_user.password << "\n";
+
+	std::cout << "\n====================================\n\n";
+
+	Resource(first_user) + Context {
+		eval {
+			std::cout << "Username: " << resource->username << "\n";
+			std::cout << "Password: " << resource->password << "\n";
+			resource->logged_in = true;
+		}
+	};
+	
+	
+	std::cout << "Username: " << first_user.username << "\n";
+	std::cout << "Password: " << first_user.password << "\n";
+	
 
 }
