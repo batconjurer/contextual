@@ -1,2 +1,2 @@
-# contextual
+![alt text](other/logo.png)
 A context manager framework for C++
