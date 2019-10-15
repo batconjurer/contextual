@@ -90,3 +90,5 @@ At the moment, there are a few ways to use this library that will have negative 
 The problematic usages all have in common that one of necessary destructors does not get called. Instnaces of all three classes `With`, `IResource`, and `Context` are meant to be temporary. They should not be forward declared, copied, or assigned unless a very particular use case demands it. 
 
 Less obviously, if a `With` block is given a name, it's destructor will not be called at the end of the context. Therefore, if one wishes to use the optional name, the entire `With` block should be placed in an anonymous scope to make sure it does not continue consuming memory. 
+
+Lastly, the `IResource` class only keeps a pointer to the data passed into its constructor. In order not to cause it to dangle, the data passed into constructor should be stored somewhere. If it is meant to be temporary, a good place is inside of the user define class inheriting from `IResource` as it will be dealllocated at the end of the `With` block.
