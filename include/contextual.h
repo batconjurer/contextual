@@ -1,7 +1,5 @@
 #include <iostream>
 #include <functional>
-#include <memory>
-#include <variant>
 #include <optional>
 #include <exception>
 /*
@@ -72,7 +70,6 @@ protected:
 	// The actual resources
 	
 	data* resources;
-	
 	virtual void enter() = 0;
 	virtual void exit(std::optional<std::exception> e) = 0;
 

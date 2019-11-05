@@ -1,6 +1,6 @@
 #include <contextual.h>
 #include <algorithm>
-#include <memory>
+
 #define eval [&](auto resource)
 
 using namespace Contextual;
