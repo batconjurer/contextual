@@ -1,3 +1,6 @@
+#ifndef CONTEXTUAL_H
+#define CONTEXTUAL_H
+
 #include <iostream>
 #include <functional>
 #include <optional>
@@ -148,3 +151,5 @@ With IResource<data>::operator+(const Context& context){
 	};
 
 *********************************************************/
+
+#endif
