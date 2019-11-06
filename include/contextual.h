@@ -5,6 +5,8 @@
 #include <functional>
 #include <optional>
 #include <exception>
+
+#define with (void) With
 /*
 
 A context manager is a class the manages two entities:
@@ -28,6 +30,9 @@ code block and gives the impression of With being a keyword. Most of its rule of
 operations are deleted to enforce this usage as it is not a traditional object, also
 ensuring that the destructors of all temporary objects are called.
 
+However, since With instantiates an instance, a compiler might issue a warning of an 
+unused variable. To avoid this, a macro "with" is defined which the preprocessor changes
+to (void) With. This removes the warnings.
 
 */
 
@@ -107,7 +112,7 @@ public:
 	With& operator=(const With&& other) = delete;
 
 	~With() = default;
-	__attribute__((unused))
+	
 	With(Context* context=nullptr, IResource<IData>* resource=nullptr): _context(context),
 									 								    resource(resource)
 							  			   			  			        {

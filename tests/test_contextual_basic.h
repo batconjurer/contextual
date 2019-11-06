@@ -89,7 +89,7 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 	IData data{"admin", "password123"};
 
 	SECTION("Test resource acquisition"){
-		With {
+		with {
 			Resource(data, false) + Context{
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
@@ -101,7 +101,7 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 	}
 
 	SECTION("Test resource release normal"){
-		With {
+		with {
 			Resource(data) + Context{
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
@@ -115,7 +115,7 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 	}
 
 	SECTION("Test resource release with exceptions"){
-		With {
+		with {
 			Resource(data) + Context{
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
@@ -131,7 +131,7 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 
 	SECTION("Test side-effects"){
 		REQUIRE(data.logged_in == false);
-		With {
+		with {
 			Resource(data) + Context{
 				[&](auto resource){
 					resource->logged_in = true;
@@ -145,7 +145,7 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 	SECTION("Test that code block can access variables in outer scope"){
 		int GLOBAL_VAR = 0;
 		
-		With {
+		with {
 			Resource(data) + Context{
 				[&](auto resource){
 					++GLOBAL_VAR;
@@ -258,7 +258,7 @@ TEST_CASE("Test exception logic", "[exceptions]"){
 	IData data{"admin", "password123"};
 
 	SECTION("Test exception suppression"){
-		With {
+		with {
 			Resource(data) + Context{
 				[&](auto resource){
 					throw std::runtime_error("");
@@ -271,7 +271,7 @@ TEST_CASE("Test exception logic", "[exceptions]"){
 
 	SECTION("Test exception propogation"){
 		try{
-			With {
+			with {
 				Resource(data, true, true) + _Context{
 					[&](auto resource){
 						throw std::runtime_error("TEST");
@@ -333,7 +333,7 @@ TEST_CASE("Test syntax features", "[syntax]"){
 
 	SECTION("Test internal IData construction"){
 		
-		With {
+		with {
 			Resource("admin", "password123") + Context{
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
@@ -346,7 +346,7 @@ TEST_CASE("Test syntax features", "[syntax]"){
 	SECTION("Test pointer initialization"){
 		REQUIRE(data.username == "admin");
 		REQUIRE(data.password == "password123");
-		With {
+		with {
 			Resource(&data) + Context{
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
