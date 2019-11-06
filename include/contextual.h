@@ -13,14 +13,15 @@ A context manager is a class the manages two entities:
 	1. resources -- temporary changes that must be made to execute a certain section of code
 	2. a context -- a code block that is to be executed with temporarily held resources
 
-Resources and contexts are given their own classes in this implementation. The Resource class
-is responsible for the knowledge of resource acquistion and release. The context is responsible
-for knowing the code block to be exectued.
+Resources are managed by a resource manager which is intended to be implemented as its own class
+by the user. The IResource provides an interface for this class. The resource manager is
+responsible for the knowledge of resource acquistion and release. It also forwards the context
+to the context manager.
 
 A context manager must then perform the following actions:
-	1. Direct the Resource class to acquire resources
-	2. Make the resources available to the code block owned by the Context class
-	3. Execute the code owned by the context
+	1. Direct the IResource class to acquire resources
+	2. Make the resources available to the code block defining the context
+	3. Execute the context
 	4. Perform appropriate exception handling if necessary
 	5. Release the resources and cleanup before exiting back to outer scope.
 
@@ -32,7 +33,8 @@ ensuring that the destructors of all temporary objects are called.
 
 However, since With instantiates an instance, a compiler might issue a warning of an 
 unused variable. To avoid this, a macro "with" is defined which the preprocessor changes
-to (void) With. This removes the warnings.
+to (void) With. This removes the warnings. This is just some syntactic sugar and does not
+work if the With class is given a name (although doing this is discouraged).
 
 */
 
@@ -46,34 +48,12 @@ struct IData;
 
 /********************************************
 *											*
-* 	Basic struct to hold the code block 	*
-*	to be executed with acquired resources	*
-*											*
-********************************************/
-
-
-struct Context {
-
-private:
-	std::function<void(IData*)> code_block;
-
-public:
-	friend class With;
-	Context(std::function<void(IData*)> code_block): code_block(std::move(code_block)){};
-};
-
-/********************************************
-*											*
 * 	The resource manager class interface	*
 *											*
 ********************************************/
 
 template <class data>
-class IResource {
-private:
-	// We store the context so that it is not deallocated prematurely
-	std::optional<Context> ctxt = std::nullopt;
-	
+class IResource {	
 protected:
 	// The actual resources
 	
@@ -88,7 +68,7 @@ public:
 	IResource<data>(data& resources) : resources(&resources){};
 	IResource<data>(data* resources) : resources(resources){};
 	
-	With operator+(const Context& context);
+	With operator()(const std::optional<std::function<void(IData*)>>& code_block={});
 	
 };
 
@@ -101,7 +81,7 @@ public:
 
 class With {
 private:
-	Context* _context;
+	std::optional<std::function<void(IData*)>> _context = {};
 		
 public:
 	IResource<IData>* resource;
@@ -113,14 +93,16 @@ public:
 
 	~With() = default;
 	
-	With(Context* context=nullptr, IResource<IData>* resource=nullptr): _context(context),
-									 								    resource(resource)
-							  			   			  			        {
+	With(std::optional<std::function<void(IData*)>> context,
+		 				 IResource<IData>* resource=nullptr):
+													 		_context(context),
+									 						resource(resource){
 		try{
 			// Execute the context
 			resource->enter();
-			_context->code_block(std::move(resource->resources));
-			
+			if (_context){
+				_context.value()(resource->resources);
+			}
 		} catch (std::exception& e) {
 			// cleanup
 			resource->exit(e);
@@ -135,9 +117,8 @@ public:
 //********************************************************
 
 template <class data>
-With IResource<data>::operator+(const Context& context){
-	ctxt = context;
-	return With(&ctxt.value(), this);
+With IResource<data>::operator()(const std::optional<std::function<void(IData*)>>& code_block){
+	return With(std::move(code_block), this);
 
 }
 
