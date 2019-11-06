@@ -107,7 +107,7 @@ public:
 	With& operator=(const With&& other) = delete;
 
 	~With() = default;
-
+	__attribute__((unused))
 	With(Context* context=nullptr, IResource<IData>* resource=nullptr): _context(context),
 									 								    resource(resource)
 							  			   			  			        {
