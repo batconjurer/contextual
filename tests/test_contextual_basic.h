@@ -73,14 +73,6 @@ namespace Contextual {
 		}
 	};
 
-	class _Context : public Context {
-	public:
-		_Context(std::function<void(IData*)> func) : Context(func) {};
-		
-		~_Context(){
-			_CONTEXT_DESTROYED = true;
-		}
-	};
 };
 
 
@@ -90,24 +82,24 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 
 	SECTION("Test resource acquisition"){
 		with {
-			Resource(data, false) + Context{
+			Resource(data, false)(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "password123");
 				}
-			}
+			)
 		};
 
 	}
 
 	SECTION("Test resource release normal"){
 		with {
-			Resource(data) + Context{
+			Resource(data)(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 				}
-			}
+			)
 		};
 
 		REQUIRE(data.username == "admin");
@@ -116,13 +108,13 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 
 	SECTION("Test resource release with exceptions"){
 		with {
-			Resource(data) + Context{
+			Resource(data)(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 					throw std::runtime_error("");
 				}
-			}
+			)
 		};
 
 		REQUIRE(data.username == "admin");
@@ -132,11 +124,11 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 	SECTION("Test side-effects"){
 		REQUIRE(data.logged_in == false);
 		with {
-			Resource(data) + Context{
+			Resource(data)(
 				[&](auto resource){
 					resource->logged_in = true;
 				}
-			}
+			)
 		};
 
 		REQUIRE(data.logged_in == true);
@@ -146,11 +138,11 @@ TEST_CASE("Test core functionality", "[core-functionaliy]"){
 		int GLOBAL_VAR = 0;
 		
 		with {
-			Resource(data) + Context{
+			Resource(data)(
 				[&](auto resource){
 					++GLOBAL_VAR;
 				}
-			}
+			)
 		};		
 		REQUIRE(GLOBAL_VAR == 1);
 	}
@@ -162,22 +154,16 @@ TEST_CASE("Test cleanup", "[cleanup]"){
 
 	_WITH_DESTROYED = false;
 	_RESOURCE_DESTROYED = false;
-	_CONTEXT_DESTROYED = false;
 
 	SECTION("Test destructors are called in anticipated use case"){
 		REQUIRE(_WITH_DESTROYED == false);
 		REQUIRE(_RESOURCE_DESTROYED == false);
-		REQUIRE(_CONTEXT_DESTROYED == false);
 
 		_With {
-			_Resource(data) + _Context{
-				[&](auto resource){
-				}
-			}
+			_Resource(data)()
 		};		
 		REQUIRE(_WITH_DESTROYED == true);
 		REQUIRE(_RESOURCE_DESTROYED == true);
-		REQUIRE(_CONTEXT_DESTROYED == true);
 		
 	}
 
@@ -185,17 +171,15 @@ TEST_CASE("Test cleanup", "[cleanup]"){
 
 		// Note that naming the context manager means it will not be destoyed
 		REQUIRE(_RESOURCE_DESTROYED == false);
-		REQUIRE(_CONTEXT_DESTROYED == false);
 
 		_With Temp{
-			_Resource(data) + _Context{
+			_Resource(data)(
 				[&](auto resource){
 				}
-			}
+			)
 		};		
 		
 		REQUIRE(_RESOURCE_DESTROYED == true);
-		REQUIRE(_CONTEXT_DESTROYED == true);
 		
 	}
 
@@ -204,17 +188,15 @@ TEST_CASE("Test cleanup", "[cleanup]"){
 		// but copy elision prevents the deletion of assignment in this case.
 
 		REQUIRE(_RESOURCE_DESTROYED == false);
-		REQUIRE(_CONTEXT_DESTROYED == false);
 
 		_With Temp = _With {
-			_Resource(data) + _Context{
+			_Resource(data)(
 				[&](auto resource){
 				}
-			}
+			)
 		};		
 		
 		REQUIRE(_RESOURCE_DESTROYED == true);
-		REQUIRE(_CONTEXT_DESTROYED == true);
 		
 	}
 
@@ -222,36 +204,19 @@ TEST_CASE("Test cleanup", "[cleanup]"){
 
 		REQUIRE(_WITH_DESTROYED == false);
 		REQUIRE(_RESOURCE_DESTROYED == false);
-		REQUIRE(_CONTEXT_DESTROYED == false);
 
 		_With {
-			_Resource(data) + _Context{
+			_Resource(data)(
 				[&](auto resource){
 					throw std::runtime_error("");
 				}
-			}
+			)
 		};		
 		REQUIRE(_WITH_DESTROYED == true);
 		REQUIRE(_RESOURCE_DESTROYED == true);
-		REQUIRE(_CONTEXT_DESTROYED == true);
 		
 	}
 
-	SECTION("Test destructors are called in withless block") {
-		// This clearly destroys the With object as the return
-		// of the + expression is not stored
-		REQUIRE(_RESOURCE_DESTROYED == false);
-		REQUIRE(_CONTEXT_DESTROYED == false);
-		_Resource(data) + _Context{
-				[&](auto resource){
-					
-				}
-			};
-
-		
-		REQUIRE(_RESOURCE_DESTROYED == true);
-		REQUIRE(_CONTEXT_DESTROYED == true);
-	}
 }
 
 TEST_CASE("Test exception logic", "[exceptions]"){
@@ -259,12 +224,12 @@ TEST_CASE("Test exception logic", "[exceptions]"){
 
 	SECTION("Test exception suppression"){
 		with {
-			Resource(data) + Context{
+			Resource(data)(
 				[&](auto resource){
 					throw std::runtime_error("");
 					REQUIRE(false);
 				}
-			}
+			)
 		};	
 		REQUIRE(true);
 	}
@@ -272,12 +237,12 @@ TEST_CASE("Test exception logic", "[exceptions]"){
 	SECTION("Test exception propogation"){
 		try{
 			with {
-				Resource(data, true, true) + _Context{
+				Resource(data, true, true)(
 					[&](auto resource){
 						throw std::runtime_error("TEST");
 						REQUIRE(false);
 					}
-				}
+				)
 			};	
 		} catch (std::runtime_error& e) {
 			REQUIRE(e.what() == std::string("TEST"));
@@ -288,31 +253,16 @@ TEST_CASE("Test exception logic", "[exceptions]"){
 TEST_CASE("Test syntax features", "[syntax]"){
 	IData data{"admin", "password123"};
 
-	SECTION("Test nameless 'Withless' block"){
-		REQUIRE(data.username == "admin");
-		REQUIRE(data.password == "password123");
-		Resource(data) + Context{
-				[&](auto resource){
-					REQUIRE(resource->username == "admin");
-					REQUIRE(resource->password == "xxxxxxxxx");
-				}
-			};
-
-		REQUIRE(data.username == "admin");
-		REQUIRE(data.password == "password123");
-	
-	}
-	
 	SECTION("Test named 'With' block"){
 		REQUIRE(data.username == "admin");
 		REQUIRE(data.password == "password123");
 		With PasswordHidden{
-			Resource(data) + Context{
+			Resource(data) (
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 				}
-			}
+			)
 		};
 
 		REQUIRE(data.username == "admin");
@@ -322,24 +272,24 @@ TEST_CASE("Test syntax features", "[syntax]"){
 	SECTION("Test IData emplace"){
 		
 		With PasswordHidden{
-			Resource(IData{"admin", "password123"}) + Context{
+			Resource(IData{"admin", "password123"})(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 				}
-			}
+			)
 		};
 	}
 
 	SECTION("Test internal IData construction"){
 		
 		with {
-			Resource("admin", "password123") + Context{
+			Resource("admin", "password123")(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 				}
-			}
+			)
 		};
 	}
 
@@ -347,12 +297,12 @@ TEST_CASE("Test syntax features", "[syntax]"){
 		REQUIRE(data.username == "admin");
 		REQUIRE(data.password == "password123");
 		with {
-			Resource(&data) + Context{
+			Resource(&data)(
 				[&](auto resource){
 					REQUIRE(resource->username == "admin");
 					REQUIRE(resource->password == "xxxxxxxxx");
 				}
-			}
+			)
 		};
 
 		REQUIRE(data.username == "admin");

@@ -48,13 +48,13 @@ int main(){
 	
 	{
 		With PasswordHidden {
-			Resource(first_user) + Context {
+			Resource(first_user)(
 				eval {
 					std::cout << "Username: " << resource->username << "\n";
 					std::cout << "Password: " << resource->password << "\n";
 					resource->logged_in = true;
 				}
-			}
+			)
 		};
 	}
 	
@@ -68,32 +68,17 @@ int main(){
 
 	std::cout << "\n====================================\n\n";
 
-	With {
-		Resource("admin", "password123") + Context {
+	with {
+		Resource("admin", "password123")(
 			eval {
 				std::cout << "Username: " << resource->username << "\n";
 				std::cout << "Password: " << resource->password << "\n";
 				resource->logged_in = true;
 			}
-		}
+		)
 	};
 
 	std::cout << "Username: " << first_user.username << "\n";
 	std::cout << "Password: " << first_user.password << "\n";
-
-	std::cout << "\n====================================\n\n";
-
-	Resource(first_user) + Context {
-		eval {
-			std::cout << "Username: " << resource->username << "\n";
-			std::cout << "Password: " << resource->password << "\n";
-			resource->logged_in = true;
-		}
-	};
-	
-	
-	std::cout << "Username: " << first_user.username << "\n";
-	std::cout << "Password: " << first_user.password << "\n";
-	
 
 }
